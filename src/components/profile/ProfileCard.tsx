@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Calendar, Briefcase, Phone, Mail, Award, User, MapPin, Star, X, Edit2, Save } from 'lucide-react';
 import type { Driver } from '../../types';
 
@@ -19,9 +19,9 @@ export default function ProfileCard({ driver, onViewSection, activeSection, onUp
   const [showFullProfile, setShowFullProfile] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editedDriver, setEditedDriver] = useState(driver);
-  const [phone, setPhone] = useState('+1 (555) 123-4567');
-  const [serviceArea, setServiceArea] = useState('Metropolitan Area');
-
+  const [phone, setPhone] = useState(driver.phone || '+1 (555) 123-4567');
+  const [serviceArea, setServiceArea] = useState(driver.serviceArea || 'Metropolitan Area');
+  
   const handleSave = () => {
     if (onUpdateDriver) {
       onUpdateDriver(editedDriver);
@@ -32,7 +32,7 @@ export default function ProfileCard({ driver, onViewSection, activeSection, onUp
   const handleLicenseToggle = (licenseId: string) => {
     const currentLicenses = editedDriver.licenseType.split(', ');
     const updatedLicenses = currentLicenses.includes(licenseId)
-      ? currentLicenses.filter(l => l !== licenseId)
+      ? currentLicenses.filter((l: string) => l !== licenseId)
       : [...currentLicenses, licenseId];
     
     setEditedDriver({
