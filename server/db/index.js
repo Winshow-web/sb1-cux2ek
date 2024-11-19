@@ -3,9 +3,17 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_ANON_KEY
-);
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_ANON_KEY;
+
+if (!supabaseUrl) {
+    throw new Error('Supabase URL must be provided in the environment variables.');
+}
+
+if (!supabaseKey) {
+    throw new Error('Supabase Key must be provided in the environment variables.');
+}
+
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 export { supabase };

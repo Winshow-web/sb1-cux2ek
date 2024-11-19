@@ -51,4 +51,5 @@ const Message = {
   }
 };
 
-export default User;
+export default Message;
+
