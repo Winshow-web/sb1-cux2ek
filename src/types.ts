@@ -8,3 +8,14 @@ export interface Message {
   createdAt: string;
   read: boolean;
 }
+/*
+export enum Type {
+  Client = 'Client',
+  Driver = 'Driver'
+}
+
+export interface UserType {
+  type: string;
+}
+
+export string UserType {};*/

@@ -21,7 +21,7 @@ router.post('/register',
     body('password').isLength({ min: 6 }),  
     body('type').isIn(['driver', 'client'])  
   ],  
-  async (req, res) => {  
+  async (req, res) => {
     try {  
       const errors = validationResult(req);  
       if (!errors.isEmpty()) {  
