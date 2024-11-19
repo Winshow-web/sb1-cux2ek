@@ -1,3 +1,4 @@
+import { User } from 'lucide-react';
 import { supabase } from '../db/index.js';
 
 const Message = {
@@ -51,3 +52,4 @@ const Message = {
 };
 
 export default Message;
+

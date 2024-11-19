@@ -1,11 +1,17 @@
 import express from 'express';  
 import { body, validationResult } from 'express-validator';  
 import jwt from 'jsonwebtoken';  
+
 import User from '../models/User.js';
 import Driver from '../models/Driver.js';
+
 import bcrypt from 'bcryptjs';
 
 const router = express.Router();  
+
+router.get('/', (req, res) => {
+  res.json({ message: 'Auth endpoint is working' });
+});
 
 // Register  
 router.post('/register',  
