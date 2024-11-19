@@ -1,6 +1,6 @@
 import { supabase } from '../db/index.js';
 
-export const Booking = {
+const Booking = {
   async create({ driverId, clientId, startDate, endDate, route, requirements }) {
     const { data, error } = await supabase
       .from('bookings')
@@ -57,3 +57,5 @@ export const Booking = {
     return data;
   }
 };
+
+export default Booking;
