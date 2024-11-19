@@ -1,7 +1,7 @@
 import bcrypt from 'bcryptjs';
 import { supabase } from '../db/index.js';
 
-export const User = {
+const User = {
   async create({ name, email, password, type }) {
     const hashedPassword = await bcrypt.hash(password, 10);
     
@@ -43,3 +43,5 @@ export const User = {
     return bcrypt.compare(password, hashedPassword);
   }
 };
+
+export default User;

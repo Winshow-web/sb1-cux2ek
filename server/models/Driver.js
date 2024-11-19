@@ -1,6 +1,6 @@
 import { supabase } from '../db/index.js';
 
-export const Driver = {
+const Driver = {
   async create({ userId, experience, licenseType, photo, specializations, phone, serviceArea }) {
     const { data, error } = await supabase
       .from('drivers')
@@ -76,3 +76,5 @@ export const Driver = {
     return data;
   }
 };
+
+export default Driver;

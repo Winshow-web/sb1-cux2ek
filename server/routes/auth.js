@@ -1,9 +1,9 @@
 import express from 'express';  
 import { body, validationResult } from 'express-validator';  
 import jwt from 'jsonwebtoken';  
-import { User } from '../models/User.js';  
-import { Driver } from '../models/Driver.js';  
-import bcrypt from 'bcrypt';  
+import User from '../models/User.js';
+import Driver from '../models/Driver.js';
+import bcrypt from 'bcryptjs';
 
 const router = express.Router();  
 
@@ -101,5 +101,4 @@ router.post('/login',
   }  
 );  
 
-// Correct export statement  
-export { router as authRouter };
+export default router;

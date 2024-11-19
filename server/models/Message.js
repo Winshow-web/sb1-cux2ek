@@ -1,6 +1,6 @@
 import { supabase } from '../db/index.js';
 
-export const Message = {
+const Message = {
   async create({ senderId, receiverId, content }) {
     const { data, error } = await supabase
       .from('messages')
@@ -49,3 +49,5 @@ export const Message = {
     return data;
   }
 };
+
+export default Message;
