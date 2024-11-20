@@ -19,6 +19,7 @@ export interface User {
 
 export interface Driver {
   id: string;
+  email: string;
   name: string;
   experience: number;
   rating: number;

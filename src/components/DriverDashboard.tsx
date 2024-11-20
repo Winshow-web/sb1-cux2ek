@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState/*, useEffect*/ } from 'react';
 import type { User, Driver, Booking } from '../types';
 import ProfileCard from './profile/ProfileCard';
 import DriverStats from './dashboard/DriverStats';
@@ -7,7 +7,7 @@ import AvailableJobs from './dashboard/AvailableJobs';
 import ChatList from './chat/ChatList';
 import ChatWindow from './chat/ChatWindow';
 import { useChatStore } from '../store/chatStore';
-import { useUserStore } from '../store/userStore';
+//import { useUserStore } from '../store/userStore';
 
 interface DriverDashboardProps {
   user: User;
@@ -39,10 +39,10 @@ export default function DriverDashboard({
     if (selectedUser) {
       const newMessage = {
         id: Math.random().toString(),
-        sender: user.id,
-        receiver: selectedUser.id,
+        senderId: user.id,
+        receiverId: selectedUser.id,
         content,
-        createdAt: new Date().toISOString(),
+        createdAt: new Date(),
         read: false,
       };
       addMessage(newMessage);
@@ -100,8 +100,8 @@ export default function DriverDashboard({
               currentUser={user}
               otherUser={selectedUser}
               messages={messages.filter(
-                m => (m.sender === user.id && m.receiver === selectedUser.id) ||
-                     (m.sender === selectedUser.id && m.receiver === user.id)
+                m => (m.senderId === user.id && m.receiverId === selectedUser.id) ||
+                     (m.senderId === selectedUser.id && m.receiverId === user.id)
               )}
               onSendMessage={handleSendMessage}
               onClose={() => setSelectedUser(null)}

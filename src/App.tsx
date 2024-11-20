@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import {useState} from 'react';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import ClientDashboard from './components/ClientDashboard';
@@ -7,12 +7,12 @@ import BookingForm from './components/BookingForm';
 import AuthModal from './components/AuthModal';
 import Footer from './components/Footer';
 import AnimatedBackground from './components/AnimatedBackground';
-import type { Driver, Booking, User, UserType, BookingFormData } from './types';
+import {Booking,/* BookingFormData,*/ BookingStatus, Driver, User, UserType} from './types';
 
 const MOCK_DRIVERS: Driver[] = [
   {
     id: '1',
-    userId: 'driver1',
+    email: "JohnSmith@gmail.com",
     name: 'John Smith',
     experience: 12,
     rating: 4.8,
@@ -20,10 +20,12 @@ const MOCK_DRIVERS: Driver[] = [
     availability: true,
     photo: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80',
     specializations: ['Long Distance', 'Tourist Groups', 'Mountain Routes'],
+    phone: "",
+    serviceArea: ""
   },
   {
     id: '2',
-    userId: 'driver2',
+    email: "SarahJohnson@gmail.com",
     name: 'Sarah Johnson',
     experience: 8,
     rating: 4.9,
@@ -31,10 +33,12 @@ const MOCK_DRIVERS: Driver[] = [
     availability: true,
     photo: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&q=80',
     specializations: ['City Tours', 'School Transport', 'Event Transportation'],
+    phone: "",
+    serviceArea: ""
   },
   {
     id: '3',
-    userId: 'driver3',
+    email: "MichaelChen@gmail.com",
     name: 'Michael Chen',
     experience: 15,
     rating: 4.7,
@@ -42,6 +46,8 @@ const MOCK_DRIVERS: Driver[] = [
     availability: false,
     photo: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80',
     specializations: ['Interstate Travel', 'Luxury Tours', 'Night Routes'],
+    phone: "",
+    serviceArea: ""
   },
 ];
 
@@ -63,14 +69,22 @@ function App() {
     setShowBookingForm(true);
   };
 
-  const handleBookingSubmit = (data: BookingFormData) => {
+  const handleBookingSubmit = (data: {
+    startDate: string;
+    endDate: string;
+    route: string;
+    requirements: string;
+  }) => {
     if (selectedDriver && user) {
       const newBooking: Booking = {
         id: Math.random().toString(36).substr(2, 9),
         driverId: selectedDriver,
         clientId: user.id,
-        ...data,
-        status: 'pending',
+        startDate: new Date(data.startDate), // Convert string to Date
+        endDate: new Date(data.endDate),     // Convert string to Date
+        route: data.route,
+        requirements: data.requirements,
+        status: BookingStatus.Pending,
       };
       setBookings([...bookings, newBooking]);
       setShowBookingForm(false);
@@ -78,7 +92,7 @@ function App() {
     }
   };
 
-  const handleLogin = (email: string, password: string, type: UserType) => {
+  const handleLogin = (email: string, _password: string, type: UserType) => {
     const userId = Math.random().toString(36).substr(2, 9);
     const newUser = {
       id: userId,
@@ -94,7 +108,7 @@ function App() {
     if (type === 'driver') {
       const newDriver: Driver = {
         id: userId,
-        userId,
+        email: email,
         name: email.split('@')[0],
         experience: 5,
         rating: 4.5,
@@ -102,12 +116,14 @@ function App() {
         availability: true,
         photo: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80',
         specializations: ['City Tours', 'Airport Transfers'],
+        phone: "",
+        serviceArea: ""
       };
       setDrivers([...drivers, newDriver]);
     }
   };
 
-  const handleSignup = (name: string, email: string, password: string, type: UserType) => {
+  const handleSignup = (name: string, email: string, _password: string, type: UserType) => {
     const userId = Math.random().toString(36).substr(2, 9);
     const newUser = {
       id: userId,
@@ -123,7 +139,7 @@ function App() {
     if (type === 'driver') {
       const newDriver: Driver = {
         id: userId,
-        userId,
+        email: email,
         name,
         experience: 0,
         rating: 5.0,
@@ -131,6 +147,8 @@ function App() {
         availability: true,
         photo: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80',
         specializations: ['City Tours'],
+        phone: "",
+        serviceArea: ""
       };
       setDrivers([...drivers, newDriver]);
     }
@@ -164,7 +182,7 @@ function App() {
   };
 
   const userDriver = user?.type === 'driver'
-    ? drivers.find(d => d.userId === user.id)
+    ? drivers.find(d => d.id === user.id)
     : null;
 
   const driverBookings = userDriver

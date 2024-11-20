@@ -1,4 +1,4 @@
-import { Menu, X, Bus, UserCircle, LogOut } from 'lucide-react';
+import { Menu, X, Bus, /* UserCircle,*/ LogOut } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import type { User } from '../types';
 
@@ -36,11 +36,11 @@ export default function Navbar({ user, onAuthClick, onLogout }: NavbarProps) {
                 <a href="#" className="text-indigo-600 px-3 py-2 rounded-md text-sm font-medium">Home</a>
                 {user && (
                   <>
-                    <a href="#drivers" className="text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium">Find Drivers</a>
-                    <a href="#bookings" className="text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium">My Bookings</a>
+                    <a href="/drivers" className="text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium">Find Drivers</a>
+                    <a href="/bookings" className="text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium">My Bookings</a>
                   </>
                 )}
-                <a href="#about" className="text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium">About</a>
+                <a href="/about" className="text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium">About</a>
               </div>
             </div>
           </div>
@@ -83,11 +83,11 @@ export default function Navbar({ user, onAuthClick, onLogout }: NavbarProps) {
             <a href="#" className="text-indigo-600 block px-3 py-2 rounded-md text-base font-medium">Home</a>
             {user && (
               <>
-                <a href="#drivers" className="text-gray-600 hover:text-indigo-600 block px-3 py-2 rounded-md text-base font-medium">Find Drivers</a>
-                <a href="#bookings" className="text-gray-600 hover:text-indigo-600 block px-3 py-2 rounded-md text-base font-medium">My Bookings</a>
+                <a href="/drivers" className="text-gray-600 hover:text-indigo-600 block px-3 py-2 rounded-md text-base font-medium">Find Drivers</a>
+                <a href="/bookings" className="text-gray-600 hover:text-indigo-600 block px-3 py-2 rounded-md text-base font-medium">My Bookings</a>
               </>
             )}
-            <a href="#about" className="text-gray-600 hover:text-indigo-600 block px-3 py-2 rounded-md text-base font-medium">About</a>
+            <a href="/about" className="text-gray-600 hover:text-indigo-600 block px-3 py-2 rounded-md text-base font-medium">About</a>
             {user ? (
               <button
                 onClick={onLogout}
