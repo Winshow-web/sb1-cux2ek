@@ -1,4 +1,3 @@
-
 export enum AccountType {
   basic_disabled = 'basic_disabled', // disabled account
   basic_suspended = 'basic_suspended', // suspended account
@@ -35,8 +34,7 @@ export interface Client extends BasicUser {
   phone: string,
 }
 
-export interface Driver {
-  id: string;
+export interface Driver extends BasicUser {
   phone: string;
   experience: number;
   rating: number;
@@ -49,10 +47,6 @@ export interface Driver {
 
 export interface Administrator extends BasicUser {}
 
-export interface OtherInformation {
-  bookings: Booking[];
-  messages: Message[];
-}
 
 export enum BookingStatus {
   Pending = 'pending',

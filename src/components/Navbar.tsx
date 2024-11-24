@@ -1,9 +1,9 @@
-import { Menu, X, Bus, /* UserCircle,*/ LogOut } from 'lucide-react';
+import { Menu, X, Bus, LogOut } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import type { User } from '../types';
+import type { BasicUser } from '../types';
 
 interface NavbarProps {
-  user: User | null;
+  user: BasicUser | null;
   onAuthClick: () => void;
   onLogout: () => void;
 }
