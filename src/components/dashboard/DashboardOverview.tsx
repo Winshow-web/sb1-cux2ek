@@ -1,4 +1,4 @@
-import { Calendar, CheckCircle, Clock, AlertCircle } from 'lucide-react';
+import { Calendar, CheckCircle, Clock } from 'lucide-react';
 
 interface DashboardOverviewProps {
   activeBookings: number;

@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import type { User, Driver, Booking } from '../types';
+import {useState} from 'react';
+import {Booking, Driver, User, UserType} from '../types';
 import DriverCard from './DriverCard';
 import BookingsList from './BookingsList';
 import DashboardOverview from './dashboard/DashboardOverview';
@@ -7,7 +7,8 @@ import ActiveContracts from './dashboard/ActiveContracts';
 import RouteSchedule from './dashboard/RouteSchedule';
 import ChatList from './chat/ChatList';
 import ChatWindow from './chat/ChatWindow';
-import { Layout, ChevronDown } from 'lucide-react';
+
+//import { Layout, ChevronDown } from 'lucide-react';
 
 interface ClientDashboardProps {
   user: User;
@@ -116,7 +117,7 @@ export default function ClientDashboard({
         {/* Chat Sidebar */}
         <div className="ml-8 flex flex-col space-y-4">
           <ChatList
-            users={drivers.map(d => ({ id: d.userId, name: d.name, type: 'driver' }))}
+            users={drivers.map(d => ({ id: d.id, email: d.email, name: d.name, type: UserType.Driver }))}
             onSelectUser={setSelectedUser}
             currentUser={user}
           />

@@ -1,4 +1,4 @@
-import { MapPin, DollarSign, Clock, Toggle } from 'lucide-react';
+import { MapPin, DollarSign, Clock } from 'lucide-react';
 import type { Driver } from '../../types';
 
 interface AvailableJobsProps {

@@ -1,6 +1,6 @@
-import { useState } from 'react';
-import { Mail, Lock, User, Truck, Users, X } from 'lucide-react';
-import type { UserType } from '../types';
+import {useState} from 'react';
+import {Lock, Mail, Truck, User, Users, X} from 'lucide-react';
+import {UserType} from '../types';
 
 interface AuthModalProps {
   onClose: () => void;
@@ -95,11 +95,11 @@ export default function AuthModal({ onClose, onLogin, onSignup }: AuthModalProps
                 <button
                   type="button"
                   className={`flex items-center justify-center px-3 py-2 border rounded-md ${
-                    formData.type === 'client'
+                    formData.type == UserType.Client
                       ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
                       : 'border-gray-300 bg-white/50 text-gray-700'
                   }`}
-                  onClick={() => setFormData({ ...formData, type: 'client' })}
+                  onClick={() => setFormData({ ...formData, type: UserType.Client })}
                 >
                   <Users className="h-4 w-4 mr-2" />
                   Client
@@ -107,11 +107,11 @@ export default function AuthModal({ onClose, onLogin, onSignup }: AuthModalProps
                 <button
                   type="button"
                   className={`flex items-center justify-center px-3 py-2 border rounded-md ${
-                    formData.type === 'driver'
+                    formData.type == UserType.Driver
                       ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
                       : 'border-gray-300 bg-white/50 text-gray-700'
                   }`}
-                  onClick={() => setFormData({ ...formData, type: 'driver' })}
+                  onClick={() => setFormData({ ...formData, type: UserType.Driver })}
                 >
                   <Truck className="h-4 w-4 mr-2" />
                   Driver

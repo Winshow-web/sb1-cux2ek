@@ -1,4 +1,3 @@
-// ... existing types ...
 export enum UserType {
   Client = 'client',
   Driver = 'driver'
@@ -20,6 +19,7 @@ export interface User {
 
 export interface Driver {
   id: string;
+  email: string;
   name: string;
   experience: number;
   rating: number;

@@ -1,5 +1,5 @@
-import { Calendar, MapPin, CheckCircle } from 'lucide-react';
-import type { Booking } from '../../types';
+import {Calendar, CheckCircle, MapPin} from 'lucide-react';
+import {Booking, BookingStatus} from '../../types';
 
 interface UpcomingTripsProps {
   bookings: Booking[];
@@ -22,7 +22,7 @@ export default function UpcomingTrips({ bookings, onUpdateStatus }: UpcomingTrip
                   </span>
                 </div>
                 <button
-                  onClick={() => onUpdateStatus(booking.id, 'completed')}
+                  onClick={() => onUpdateStatus(booking.id, BookingStatus.Completed)}
                   className="flex items-center px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm hover:bg-green-200 transition-colors"
                 >
                   <CheckCircle className="h-4 w-4 mr-1" />

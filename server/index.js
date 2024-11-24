@@ -45,6 +45,11 @@ app.use(express.json());
 app.use((req, res, next) => {
   const nonce = crypto.randomBytes(16).toString('base64'); // Generate nonce
   res.locals.nonce = nonce; // Store nonce in response locals
+
+  console.log(`Incoming ${req.method} request to ${req.path}`);
+  console.log('Headers:', req.headers);
+  console.log('Body:', req.body);
+
   next();
 });
 
@@ -99,17 +104,6 @@ app.use('/api/users', userRoutes);
 app.use('/api/drivers', driverRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/messages', messageRoutes);
-
-// Root route for redirect or serving index.html (you could also remove it if it's blocking)
-//app.get('/', (req, res) => {
-//  const indexPath = path.join(__dirname, 'build', 'index.html');
-//  res.sendFile(indexPath, (err) => {
-//    if (err) {
-//      console.error("Error sending file:", err);
-//      res.status(500).send('Error serving index.html');
-//    }
-//  });
-//});
 
 // Fallback route for undefined endpoints (optional, uncomment if needed)
 app.use('*', (req, res) => {
