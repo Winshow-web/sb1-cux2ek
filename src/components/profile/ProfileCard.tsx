@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Calendar, Briefcase, Phone, Mail, Award, User, MapPin, Star, X, Edit2, Save } from 'lucide-react';
+import { Calendar, Briefcase, Phone, Mail, MapPin, Star, X, Edit2, Save } from 'lucide-react';
 import type { Driver } from '../../types';
 
 interface ProfileCardProps {

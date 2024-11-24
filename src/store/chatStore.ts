@@ -23,7 +23,7 @@ export const useChatStore = create<ChatState>((set) => ({
   markMessagesAsRead: (senderId, receiverId) =>
     set((state) => ({
       messages: state.messages.map((msg) =>
-        msg.sender === senderId && msg.receiver === receiverId ? { ...msg, read: true } : msg
+        msg.senderId === senderId && msg.receiverId === receiverId ? { ...msg, read: true } : msg
       ),
     })),
 }));
