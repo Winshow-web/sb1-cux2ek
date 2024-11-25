@@ -1,11 +1,11 @@
 import {useState} from 'react';
 import {Lock, Mail, Truck, User, Users, X} from 'lucide-react';
-import {UserType} from '../types';
+import {AccountType} from '../types';
 
 interface AuthModalProps {
   onClose: () => void;
-  onLogin: (email: string, password: string, type: UserType) => void;
-  onSignup: (name: string, email: string, password: string, type: UserType) => void;
+  onLogin: (email: string, password: string) => void;
+  onSignup: (name: string, email: string, password: string, type: AccountType) => void;
 }
 
 export default function AuthModal({ onClose, onLogin, onSignup }: AuthModalProps) {
@@ -14,13 +14,13 @@ export default function AuthModal({ onClose, onLogin, onSignup }: AuthModalProps
     name: '',
     email: '',
     password: '',
-    type: 'client' as UserType,
+    type: AccountType.client as AccountType,
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (isLogin) {
-      onLogin(formData.email, formData.password, formData.type);
+      onLogin(formData.email, formData.password);
     } else {
       onSignup(formData.name, formData.email, formData.password, formData.type);
     }
@@ -89,35 +89,37 @@ export default function AuthModal({ onClose, onLogin, onSignup }: AuthModalProps
                 />
               </label>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Account Type</label>
-              <div className="mt-2 grid grid-cols-2 gap-3">
-                <button
-                  type="button"
-                  className={`flex items-center justify-center px-3 py-2 border rounded-md ${
-                    formData.type == UserType.Client
-                      ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
-                      : 'border-gray-300 bg-white/50 text-gray-700'
-                  }`}
-                  onClick={() => setFormData({ ...formData, type: UserType.Client })}
-                >
-                  <Users className="h-4 w-4 mr-2" />
-                  Client
-                </button>
-                <button
-                  type="button"
-                  className={`flex items-center justify-center px-3 py-2 border rounded-md ${
-                    formData.type == UserType.Driver
-                      ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
-                      : 'border-gray-300 bg-white/50 text-gray-700'
-                  }`}
-                  onClick={() => setFormData({ ...formData, type: UserType.Driver })}
-                >
-                  <Truck className="h-4 w-4 mr-2" />
-                  Driver
-                </button>
+            {!isLogin && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Account Type</label>
+                <div className="mt-2 grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    className={`flex items-center justify-center px-3 py-2 border rounded-md ${
+                      formData.type == AccountType.client
+                        ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
+                        : 'border-gray-300 bg-white/50 text-gray-700'
+                    }`}
+                    onClick={() => setFormData({ ...formData, type: AccountType.client })}
+                  >
+                    <Users className="h-4 w-4 mr-2" />
+                    Client
+                  </button>
+                  <button
+                    type="button"
+                    className={`flex items-center justify-center px-3 py-2 border rounded-md ${
+                      formData.type == AccountType.driver
+                        ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
+                        : 'border-gray-300 bg-white/50 text-gray-700'
+                    }`}
+                    onClick={() => setFormData({ ...formData, type: AccountType.driver })}
+                  >
+                    <Truck className="h-4 w-4 mr-2" />
+                    Driver
+                  </button>
+                </div>
               </div>
-            </div>
+            )}
             <div className="flex flex-col space-y-4">
               <button
                 type="submit"
@@ -140,3 +142,4 @@ export default function AuthModal({ onClose, onLogin, onSignup }: AuthModalProps
     </div>
   );
 }
+

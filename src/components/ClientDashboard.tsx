@@ -1,5 +1,5 @@
 import {useState} from 'react';
-import {Booking, Driver, User, UserType} from '../types';
+import {Booking, Driver} from '../types';
 import DriverCard from './DriverCard';
 import BookingsList from './BookingsList';
 import DashboardOverview from './dashboard/DashboardOverview';
