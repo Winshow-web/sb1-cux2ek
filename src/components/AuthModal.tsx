@@ -1,4 +1,4 @@
-import {useState} from 'react';
+import React, {useState} from 'react';
 import {Lock, Mail, Truck, User, Users, X} from 'lucide-react';
 import {AccountType} from '../types';
 
@@ -14,7 +14,7 @@ export default function AuthModal({ onClose, onLogin, onSignup }: AuthModalProps
     name: '',
     email: '',
     password: '',
-    type: AccountType.client as AccountType,
+    account_type: AccountType.none as AccountType,
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -22,7 +22,7 @@ export default function AuthModal({ onClose, onLogin, onSignup }: AuthModalProps
     if (isLogin) {
       onLogin(formData.email, formData.password);
     } else {
-      onSignup(formData.name, formData.email, formData.password, formData.type);
+      onSignup(formData.name, formData.email, formData.password, formData.account_type);
     }
   };
 
@@ -96,11 +96,11 @@ export default function AuthModal({ onClose, onLogin, onSignup }: AuthModalProps
                   <button
                     type="button"
                     className={`flex items-center justify-center px-3 py-2 border rounded-md ${
-                      formData.type == AccountType.client
+                      formData.account_type == AccountType.client_new
                         ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
                         : 'border-gray-300 bg-white/50 text-gray-700'
                     }`}
-                    onClick={() => setFormData({ ...formData, type: AccountType.client })}
+                    onClick={() => setFormData({ ...formData, account_type: AccountType.client_new })}
                   >
                     <Users className="h-4 w-4 mr-2" />
                     Client
@@ -108,11 +108,11 @@ export default function AuthModal({ onClose, onLogin, onSignup }: AuthModalProps
                   <button
                     type="button"
                     className={`flex items-center justify-center px-3 py-2 border rounded-md ${
-                      formData.type == AccountType.driver
+                      formData.account_type == AccountType.driver_new
                         ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
                         : 'border-gray-300 bg-white/50 text-gray-700'
                     }`}
-                    onClick={() => setFormData({ ...formData, type: AccountType.driver })}
+                    onClick={() => setFormData({ ...formData, account_type: AccountType.driver_new })}
                   >
                     <Truck className="h-4 w-4 mr-2" />
                     Driver

@@ -10,6 +10,9 @@ import { supabase } from './db/index.js';
 import AccountType from './models/AccountType.js';
 import {header} from "express-validator";
 
+import authRouter from './routes/auth.js';
+import formRouter from './routes/form.js';
+
 // Load environment variables from .env file
 dotenv.config();
 
@@ -44,143 +47,9 @@ app.use(cors({
 // Parse incoming JSON requests
 app.use(express.json());
 
+app.use('/auth', authRouter);
+app.use('/form', formRouter);
 
-
-app.post('/auth/register', async (req, res) => {
-  const { email, password, name } = req.body;
-
-  if (!email || !password || !name) {
-    return res.status(400).json({ error: 'Email, password, and name are required' });
-  }
-
-  try {
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          display_name: name,
-          account_type: AccountType.basic
-        }
-      }
-    });
-
-    if (error) {
-      return res.status(400).json({ error: error.message });
-    }
-
-    const { user } = data;
-    const { id } = user;
-
-    // Log to check if user ID is returned successfully
-    console.log('Registered user ID:', id);
-
-    // Respond with success
-    res.status(201).json({ message: 'User registered successfully', data });
-  } catch (err) {
-    console.error('Error registering user:', err);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
-
-app.post('/auth/login', async (req, res) => {
-  const { email, password } = req.body;
-
-  if (!email || !password) {
-    return res.status(400).json({ error: 'Email and password are required' });
-  }
-
-  try {
-    // Authenticate the user
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    if (error) {
-      return res.status(401).json({ error: 'Invalid login credentials' });
-    }
-
-    const user = data?.user;
-
-    if (!user) {
-      console.log('User not found in authentication response');
-      return res.status(500).json({ error: 'Authentication failed: No user found' });
-    }
-
-    if (!user.email_confirmed_at) {
-      return res.status(403).json({
-        error: 'Email not confirmed. Please verify your email first.',
-        details: 'You need to confirm your email address before logging in.',
-      });
-    }
-
-    // Extract `account_type` from user_metadata
-    const { id: userId, email: userEmail, user_metadata } = user;
-    const accountType = user_metadata?.account_type;
-
-    if (!accountType) {
-      console.log('Account type missing in user metadata');
-      return res.status(404).json({
-        error: 'Account type not found in user metadata',
-      });
-    }
-
-    console.log('Successfully logged in user:', userId, 'with account type:', accountType);
-
-    // Respond with user details
-    res.status(200).json({
-      message: 'User logged in successfully',
-      user: {
-        id: userId,
-        email: userEmail,
-        account_type: accountType,
-      },
-    });
-  } catch (err) {
-    console.error('Error logging in user:', err.message);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
-
-
-app.get('/new/driver/', async (req, res) => {
-  const { id, phone, experiecne, rating, licenseType, specializations, serviceArea, availability, photo } = req.body;
-
-});
-
-app.get('/get/driver/', async (req, res) => {
-  const { driverId } = req.body;
-
-  if (!driverId) {
-    return res.status(400).json({ error: 'Driver Id Required' });
-  }
-
-  try {
-    const { data, error } = await supabase
-        .from('Drivers')
-        .select('*')
-        .eq('id', driverId);
-
-    if (!data) {
-      return res.status(404).json({ error: 'Driver not found' });
-    }
-
-    return res.json(data);
-
-  } catch (err) {
-    console.error('Error Fetching Driver Info:', err.message);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
-
-app.post('/api/get_client', async (req, res) => {
-
-});
-
-app.post('/api/get_booking', async (req, res) => {
-
-});
 
 const authenticate = async (req, res, next) => {
   const token = req.headers.authorization?.split(' ')[1];
@@ -378,7 +247,7 @@ io.on('connection', (socket) => {
     }
     console.log('User disconnected:', socket.id);
   });
-});
+ });
 
 // Routes (defined after middleware and socket setup)
 app.use('/api/auth', authRouter);

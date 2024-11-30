@@ -8,6 +8,7 @@ import AuthModal from './components/AuthModal';
 import Footer from './components/Footer';
 import AnimatedBackground from './components/AnimatedBackground';
 import { AccountType, Booking, BookingStatus, Driver, BasicUser, Message } from './types';
+//import {transferableAbortController} from "node:util";
 
 function App() {
   const [user, setUser] = useState<BasicUser | null>(null);
@@ -17,7 +18,7 @@ function App() {
   const [showBookingForm, setShowBookingForm] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [drivers, setDrivers] = useState<Driver[]>([]);
-  const [allUsers, setAllUsers] = useState<BasicUser[]>([]);
+  const [allUsers/*, setAllUsers*/] = useState<BasicUser[]>([]);
 
   const baseUrl = 'http://localhost:5000';
 
@@ -89,16 +90,12 @@ function App() {
         const user_id = data.user.id;
         const accountType = data.user.account_type;
 
-        if (accountType === AccountType.basic_disabled) {
-          // Handle case for disabled basic account
-        } else if (accountType === AccountType.basic_suspended) {
-          // Handle case for suspended basic account
-        } else if (accountType === AccountType.basic) {
-          // Handle case for active basic account
-        } else if (accountType === AccountType.client_disabled) {
+        if (accountType === AccountType.client_disabled) {
           // Handle case for disabled client account
         } else if (accountType === AccountType.client_suspended) {
           // Handle case for suspended client account
+        } else if (accountType === AccountType.client_new) {
+          // Handle case for new client account
         } else if (accountType === AccountType.client_pending) {
           // Handle case for client account awaiting approval
         } else if (accountType === AccountType.client_rejected) {
@@ -109,15 +106,15 @@ function App() {
           // Handle case for disabled driver account
         } else if (accountType === AccountType.driver_suspended) {
           // Handle case for suspended driver account
+        } else if (accountType === AccountType.driver_new) {
+          // Handle case for new driver account
         } else if (accountType === AccountType.driver_pending) {
           // Handle case for driver account awaiting approval
         } else if (accountType === AccountType.driver_rejected) {
           // Handle case for rejected driver account
         } else if (accountType === AccountType.driver) {
-
           await fetchDriverData(user_id);
           await fetchUserBookings(user_id);
-
         } else if (accountType === AccountType.administrator_disabled) {
           // Handle case for disabled administrator account
         } else if (accountType === AccountType.administrator_suspended) {
@@ -127,6 +124,8 @@ function App() {
         } else {
           // Handle case for unknown or unrecognized account type
         }
+
+
 
 
       } else {
@@ -140,17 +139,23 @@ function App() {
   };
 
   // Handle user registration
-  const handleSignup = async (name: string, email: string, password: string, accountType: AccountType) => {
+  const handleSignup = async (name: string, email: string, password: string, account_type: AccountType) => {
     try {
+
+      if (account_type !== AccountType.client_new && account_type !== AccountType.driver_new) {
+        throw new Error('C: Provide a valid account type for register: ' + account_type );
+      }
+
       const response = await fetch(`${baseUrl}/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password }),
+        body: JSON.stringify({ name, email, password, account_type }),
       });
 
       if (response.ok) {
         const data = await response.json();
         setUser(data.user);
+        alert('Registration successful!');
       } else {
         throw new Error('Registration failed');
       }
@@ -209,11 +214,11 @@ function App() {
       const data = await response.json();
 
       setDrivers(prevDrivers => {
-        const driverExists = prevDrivers.some(d => d.uuid === driverId);
+        const driverExists = prevDrivers.some(d => d.id === driverId);
         if (!driverExists) {
           return [...prevDrivers, data];
         }
-        return prevDrivers.map(d => d.uuid === driverId ? data : d);
+        return prevDrivers.map(d => d.id === driverId ? data : d);
       });
     } catch (error) {
       console.error('Error fetching driver data:', error);
@@ -250,7 +255,7 @@ function App() {
       }
 
       setDrivers(drivers.map(driver =>
-          driver.uuid === driverId
+          driver.id === driverId
               ? { ...driver, availability: available }
               : driver
       ));
@@ -286,11 +291,11 @@ function App() {
 
   // Filter bookings based on user type
   const userDriver = user?.accountType.includes('driver')
-      ? drivers.find(d => d.uuid === user.uuid)
+      ? drivers.find(d => d.id === user.uuid)
       : null;
 
   const driverBookings = userDriver
-      ? bookings.filter(b => b.driver_uuid === userDriver.uuid)
+      ? bookings.filter(b => b.driver_uuid === userDriver.id)
       : [];
 
   const clientBookings = user?.accountType.includes('client')
@@ -323,7 +328,7 @@ function App() {
                   user={user}
                   driver={userDriver}
                   bookings={driverBookings}
-                  onUpdateAvailability={(available) => handleUpdateAvailability(userDriver.uuid, available)}
+                  onUpdateAvailability={(available) => handleUpdateAvailability(userDriver.id, available)}
                   onUpdateBookingStatus={handleUpdateBookingStatus}
                   allUsers={allUsers}
               />
