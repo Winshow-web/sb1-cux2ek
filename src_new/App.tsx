@@ -1,31 +1,64 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 //import { Supabase_User } from '@supabase/supabase-js';
-import {AccountType, User, Client, Driver, DriverForm} from "./types.ts";
-
-
-import AnimatedBackground from "../src/components/AnimatedBackground.tsx";
-import Navbar from "./Components/Home/Navbar.tsx"
+import {AccountType, User, DriverForm, ClientForm} from "./types.ts";
+import AnimatedBackground from "./Components/Home/AnimatedBackground.tsx";
+import Navbar from "./Components/Home/Navbar.tsx";
 import Hero from "./Components/Home/Hero.tsx";
 import Form from "./Components/Form/Form.tsx";
 import Footer from "./Components/Home/Footer.tsx";
-
-
-import AuthModal from "../src/components/AuthModal.tsx";
-
-
-
+import AuthModal from "./Components/AuthSidePanel/AuthSidePanel";
 
 function App() {
     const [user, setUser] = useState<User | null>(null);
-
     const [showAuthModal, setShowAuthModal] = useState(false);
+    const baseUrl = (import.meta as any).env.VITE_SERVER_URL;
 
-    //const [messages, setMessages] = useState<Message[]>([]);
+    // Cookie functions
+    const setTokenInCookies = (token: string): void => {
+        const expiry = new Date();
+        expiry.setHours(expiry.getHours() + 1); // Set cookie expiry time (1 hour)
+        document.cookie = `authToken=${token}; expires=${expiry.toUTCString()}; path=/; SameSite=Lax`; // Secure; HttpOnly;
+    };
 
-    //const [bookings, setBookings] = useState<Booking[]>([]);
-    //const [showBookingForm, setShowBookingForm] = useState(false);
+    const getTokenFromCookies = (): string | null => {
+        const match = document.cookie.match(/(^| )authToken=([^;]+)/);
+        console.log("match", match);
+        return match ? match[2] : null;  // Return the token or null if not found
+    };
 
-    const baseUrl = import.meta.env.VITE_SERVER_URL;
+    const deleteTokenFromCookies = (): void => {
+        document.cookie = "authToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+    };
+
+    // Fetch user data if a valid token exists
+    useEffect(() => {
+        const token = getTokenFromCookies();
+        if (token) {
+            fetchUserFromToken(token);
+        }
+    }, []);
+
+    const fetchUserFromToken = async (token: string) => {
+        try {
+            const response = await fetch(`${baseUrl}/auth/me`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                },
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                setUser(data.user);  // Set the user state with the fetched data
+            } else {
+                console.error('Failed to fetch user data');
+                setUser(null);  // If token is invalid, clear the user state
+            }
+        } catch (error) {
+            console.error('Error fetching user data:', error);
+            setUser(null);  // Handle errors and clear user state
+        }
+    };
 
     const handleLogin = async (email: string, password: string) => {
         try {
@@ -38,7 +71,7 @@ function App() {
             if (response.ok) {
                 const data = await response.json();
                 setUser(data.user);
-                localStorage.setItem('authToken', data.token); // Store the token securely
+                setTokenInCookies(data.session.access_token);
                 setShowAuthModal(false);
             } else {
                 console.error('Login response not ok');
@@ -50,9 +83,8 @@ function App() {
 
     const handleSignup = async (name: string, email: string, password: string, account_type: AccountType) => {
         try {
-
             if (account_type !== AccountType.client_new && account_type !== AccountType.driver_new) {
-                console.error('C: Provide a valid account type for register: ' + account_type );
+                console.error('C: Provide a valid account type for register: ' + account_type);
             }
 
             const response = await fetch(`${baseUrl}/auth/register`, {
@@ -62,29 +94,27 @@ function App() {
             });
 
             if (response.ok) {
-                const data = await response.json();
-
-                const { id, email, user_metadata } = data.data.user;
-                const { display_name, account_type } = user_metadata;
-
-                setUser(new User(id, display_name, email, account_type));
-
+                //const data = await response.json();
+                //console.log(data);
+                //const { id, email, display_name, account_type } = data.user;
+                //setUser(new User(id, display_name, email, account_type));
                 alert('Registration successful!');
             } else {
                 console.error('Registration failed');
             }
-
-
         } catch (error) {
             console.error('Registration error:', error);
         }
     };
 
-    const handleDriverSubmit = async (driverData: DriverForm) => {
+    // Function to handle driver registration form submission
+    const handleDriverSubmit = async (driverData: DriverForm): Promise<void> => {
         try {
-            const token = localStorage.getItem('authToken');
+            const token = getTokenFromCookies();
             if (!token) {
+                alert('User not authenticated. Please log in to continue.');
                 console.error('User not authenticated');
+                return;
             }
 
             const formData = new FormData();
@@ -97,44 +127,92 @@ function App() {
             formData.append('specializations', driverData.specializations.join(','));
             formData.append('serviceArea', driverData.serviceArea);
 
-            if (driverData.photo) {
+            if (driverData.photo instanceof File) {
                 formData.append('photo', driverData.photo);
+            } else {
+                console.error('Invalid photo file');
+                alert('Please upload a valid photo.');
+                return;
             }
 
             const response = await fetch(`${baseUrl}/form/driver`, {
                 method: 'POST',
                 headers: {
-                    Authorization: `Bearer ${token}`, // Include the token in the Authorization header
+                    Authorization: `Bearer ${token}`,
                 },
                 body: formData,
             });
 
             if (response.ok) {
                 const data = await response.json();
-                console.log("Request submitted succsessfully\n"+data);
-                setUser(data.user); // Update the user state if necessary
+                console.log('Request submitted successfully:', data);
                 alert('Driver registration successful!');
+                // TODO: 5 After success, load the form and then redirect to a form pending page
             } else {
-                console.error('Driver registration failed: ');
+                const errorData = await response.json();
+                console.error('Driver registration failed:', errorData);
+                alert('Driver registration failed: ' + (errorData.message || 'Unknown error'));
             }
         } catch (error) {
             console.error('Error submitting driver form:', error);
+            alert('An error occurred while submitting the form. Please try again later.');
         }
     };
 
-    const handleClientSubmit = () => {
-        console.log('Client form submitted');
+    const handleClientSubmit = async (clientData: ClientForm): Promise<void> => {
+        try {
+            const token = getTokenFromCookies();
+            if (!token) {
+                alert('User not authenticated. Please log in to continue.');
+                console.error('User not authenticated');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('id', clientData.id);
+            formData.append('phone', clientData.phone);
+
+            if (clientData.photo instanceof File) {
+                formData.append('photo', clientData.photo);
+            } else {
+                console.error('Invalid photo file');
+                alert('Please upload a valid photo.');
+                return;
+            }
+
+            const response = await fetch(`${baseUrl}/form/client`, {
+                method: 'POST',
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+                body: formData,
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                console.log('Client request submitted successfully:', data);
+                alert('Client registration successful!');
+            } else {
+                const errorData = await response.json();
+                console.error('Client registration failed:', errorData);
+                alert('Client registration failed: ' + (errorData.message || 'Unknown error'));
+            }
+        } catch (error) {
+            console.error('Error submitting client form:', error);
+            alert('An error occurred while submitting the form. Please try again later.');
+        }
     };
+
 
     const handleLogout = async () => {
         try {
             setUser(null);
+            deleteTokenFromCookies();
             localStorage.removeItem('authToken');
         } catch (error) {
             console.error('Logout error:', error);
         }
     };
-
 
     return (
         <div className="min-h-screen bg-transparent flex flex-col relative">
@@ -148,7 +226,6 @@ function App() {
             {!user && <Hero />}
 
             <main className="flex-grow">
-
                 {user ? (
                     user.account_type === AccountType.client_new || user.account_type === 'driver_new' ? (
                         <Form
@@ -165,7 +242,6 @@ function App() {
                 ) : (
                     <p>No user logged in</p>
                 )}
-
             </main>
 
             {showAuthModal && (
@@ -179,7 +255,6 @@ function App() {
             <Footer />
         </div>
     );
-
 }
 
 export default App;

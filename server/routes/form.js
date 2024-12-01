@@ -1,64 +1,107 @@
 import express from 'express';
 import multer from 'multer';
-import { body, validationResult } from 'express-validator';
 import verifyToken from "../middleware/auth.js";
+import { supabase } from "../db/index.js";
+
+// Set up multer for file handling
+const storage = multer.memoryStorage();
+const upload = multer({ storage: storage }).single('photo');  // Single file upload
 
 const router = express.Router();
 
-// Configure Multer for file uploads
-const storage = multer.memoryStorage();
-const upload = multer({ storage: storage });
+// Driver registration route
+router.post('/driver', verifyToken, upload, async (req, res) => {
+    const { name, email, phone, experience, licenseType, specializations, serviceArea } = req.body;
+    const photo = req.file;  // The uploaded photo
 
-// Validation middleware for driver form
-const driverFormValidator = [
-    body('name').isString().notEmpty().withMessage('Name is required'),
-    body('email').isEmail().withMessage('Valid email is required'),
-    body('phone').isString().notEmpty().withMessage('Phone number is required'),
-    body('experience').isString().notEmpty().withMessage('Experience is required'),
-    body('licenseType').isString().notEmpty().withMessage('License type is required'),
-    body('specializations').isString().notEmpty().withMessage('Specializations are required'),
-    body('serviceArea').isString().notEmpty().withMessage('Service area is required'),
-];
+    // Ensure photo is uploaded
+    if (!photo) {
+        console.log("No photo uploaded");
+        return res.status(400).json({ message: 'Photo is required' });
+    }
 
-// POST route to handle driver registration
-router.post(
-    '/driver',
-    verifyToken, // Protect the route with token verification
-    upload.single('photo'), // Handle photo uploads
-    ...driverFormValidator, // Spread the validation middleware
-    async (req, res) => {
-        // Check validation errors
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            return res.status(400).json({ errors: errors.array() });
+    const userId = req.user.id;  // Get the authenticated user's ID from token
+
+    try {
+        // Check if driver registration already exists for the user
+        const { data: existingDriver, error: existingDriverError } = await supabase
+            .from('Driver Requests')
+            .select('id')
+            .eq('id', userId)
+            .single();
+
+        if (existingDriver) {
+            console.log("Driver form already exists for this user");
+            return res.status(400).json({ message: 'Driver form already exists for this user.' });
         }
 
-        const { name, email, phone, experience, licenseType, specializations, serviceArea } = req.body;
-        const photo = req.file; // The uploaded photo file will be available here
+        // Convert file buffer to ArrayBuffer for upload
+        const arrayBuffer = photo.buffer;
+        const fileExtension = photo.originalname.split('.').pop();
+        const fileName = `${userId}.${fileExtension}`;
 
-        try {
-            // Prepare the response data
-            const responseData = {
+        // Upload photo to Supabase storage
+        const { data: uploadData, error: uploadError } = await supabase.storage
+            .from('ProfilePictures')
+            .upload(`Drivers/${fileName}`, arrayBuffer, {
+                contentType: photo.mimetype,
+                upsert: false  // Don't overwrite existing files
+            });
+
+        if (uploadError) {
+            console.error("Error uploading photo:", uploadError);
+            return res.status(500).json({ error: 'Error uploading photo' });
+        }
+
+        // Generate a signed URL to access the uploaded photo
+        const { data: signedUrlData, error: signedUrlError } = await supabase.storage
+            .from('ProfilePictures')
+            .createSignedUrl(`Drivers/${fileName}`, 60 * 60); // Valid for 1 hour
+
+        if (signedUrlError) {
+            console.error("Error generating signed URL:", signedUrlError);
+            return res.status(500).json({ error: 'Error generating signed URL' });
+        }
+
+        const photoUrl = signedUrlData.signedUrl;
+
+        // Insert driver data into the database
+        const { data: newDriver, error: insertError } = await supabase
+            .from('Driver Requests')
+            .insert([{
+                id: userId,
                 name,
                 email,
                 phone,
-                experience: parseInt(experience, 10),
-                licenseType,
+                experience,
+                license_type: licenseType,
                 specializations: specializations.split(','),
-                serviceArea,
-                photo: photo ? photo.originalname : null,
-            };
+                service_area: serviceArea,
+                photo: photoUrl,  // Store the URL of the photo
+            }]);
 
-            // Respond to the client
-            res.status(201).json({
-                message: 'Driver registration successful',
-                data: responseData,
-            });
-        } catch (error) {
-            console.error(error);
-            res.status(500).json({ error: 'Something went wrong' });
+        if (insertError) {
+            console.error("Error inserting driver data:", insertError);
+            return res.status(500).json({ error: 'Error inserting driver data' });
         }
+
+        console.log("Driver registration successful:", newDriver);
+
+        res.status(201).json({
+            message: 'Driver registration successful',
+            data: newDriver,  // Return all fields except ID
+        });
+
+    } catch (error) {
+        console.error("Error during driver registration:", error);
+        res.status(500).json({ error: 'Server error' });
     }
-);
+});
+
+// TODO: 1 After successful form submission, change account type to ..._pending
+
+// TODO: 2 Add client form route
+
+// TODO: 3 Add form fetch route
 
 export default router;

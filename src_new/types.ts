@@ -49,6 +49,12 @@ export interface Client {
     phone: string;
 }
 
+export interface ClientForm {
+    id: string;
+    phone: string;
+    photo: File;
+}
+
 export interface Driver {
     id: string;
     phone: string;
@@ -70,5 +76,5 @@ export interface DriverForm {
     licenseType: string;
     specializations: string[];
     serviceArea: string;
-    photo: string;
+    photo: File;
 }

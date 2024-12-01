@@ -12,6 +12,7 @@ import {header} from "express-validator";
 
 import authRouter from './routes/auth.js';
 import formRouter from './routes/form.js';
+import verifyToken from "./middleware/auth.js";
 
 // Load environment variables from .env file
 dotenv.config();
@@ -47,6 +48,7 @@ app.use(cors({
 // Parse incoming JSON requests
 app.use(express.json());
 
+app.get('/auth/me', verifyToken, (req, res) => {return res.json({ user: req.user });});
 app.use('/auth', authRouter);
 app.use('/form', formRouter);
 

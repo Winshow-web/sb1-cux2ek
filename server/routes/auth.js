@@ -1,7 +1,7 @@
 import express from 'express';
 import { body, validationResult } from 'express-validator';
-import jwt from 'jsonwebtoken';
 import { supabase } from '../db/index.js';
+import verifyToken from "../middleware/auth.js";
 
 const router = express.Router();
 
@@ -33,6 +33,10 @@ router.post(
         }
 
         const user = data?.user;
+        const session = data?.session;
+
+        //console.log(session);
+
         if (!user) {
           console.error('User not found in authentication response');
           return res.status(500).json({ error: 'Authentication failed: No user found' });
@@ -58,18 +62,6 @@ router.post(
 
         console.log('Successfully logged in user:', userId, 'with account type:', accountType);
 
-        const token = jwt.sign(
-            {
-              id: userId,
-              name: displayName,
-              email: userEmail,
-            },
-            process.env.JWT_SECRET,
-            {
-              expiresIn: '1d',
-            }
-        );
-
         // Respond with user details
         return res.status(200).json({
           message: 'User logged in successfully',
@@ -79,7 +71,7 @@ router.post(
             email: userEmail,
             account_type: accountType,
           },
-          token,
+          session,
         });
       } catch (err) {
         console.error('Error logging in user:', err.message);

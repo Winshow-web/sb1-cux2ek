@@ -9,7 +9,7 @@ interface AuthModalProps {
 }
 
 export default function AuthModal({ onClose, onLogin, onSignup }: AuthModalProps) {
-    const [isLogin, setIsLogin] = useState(false);
+    const [isLogin, setIsLogin] = useState(true);
     const [formData, setFormData] = useState({
         name: '',
         email: '',

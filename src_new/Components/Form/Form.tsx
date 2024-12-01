@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { AccountType, Client, DriverForm } from '../../types.ts';
+import { AccountType, ClientForm, DriverForm } from '../../types.ts';
 
 interface FormProps {
     id: string;
@@ -7,7 +7,7 @@ interface FormProps {
     email: string;
     account_type: AccountType;
     onSubmitDriverForm: (driverData: DriverForm) => void;
-    onSubmitClientForm: (clientData: Client) => void;
+    onSubmitClientForm: (clientData: ClientForm) => void;
 }
 
 export default function Form({
@@ -18,7 +18,6 @@ export default function Form({
                                  onSubmitDriverForm,
                                  onSubmitClientForm,
                              }: FormProps) {
-    // Add newSpecialization to the formData state
     const [formData, setFormData] = useState({
         id,
         name,
@@ -26,18 +25,17 @@ export default function Form({
         phone: '',
         experience: '',
         licenseType: '',
-        specializations: [] as string[], // Start with an empty array for specializations
+        specializations: [] as string[],
         serviceArea: '',
         photo: null as File | null,
-        newSpecialization: '', // This is the new field for the input
+        newSpecialization: '',
     });
 
-    // Handle form input changes
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value, type } = e.target;
 
         if (type === 'file' && e.target instanceof HTMLInputElement) {
-            const files = e.target.files; // Explicitly access files
+            const files = e.target.files;
             setFormData({
                 ...formData,
                 [name]: files ? files[0] : null,
@@ -50,48 +48,44 @@ export default function Form({
         }
     };
 
-    // Add a new specialization to the list
     const addSpecialization = () => {
-        if (formData.newSpecialization.trim() !== '') {
+        if (formData.newSpecialization.trim()) {
             setFormData({
                 ...formData,
-                specializations: [...formData.specializations, formData.newSpecialization],
-                newSpecialization: '', // Reset input field after adding
+                specializations: [...formData.specializations, formData.newSpecialization.trim()],
+                newSpecialization: '',
             });
         }
     };
 
-    // Remove a specialization from the list
     const removeSpecialization = (index: number) => {
-        const updatedSpecializations = formData.specializations.filter((_, i) => i !== index);
         setFormData({
             ...formData,
-            specializations: updatedSpecializations,
+            specializations: formData.specializations.filter((_, i) => i !== index),
         });
     };
 
-    // Handle form submit
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+
         if (account_type === AccountType.driver_new) {
-            // For driver, we need to pass driver data
             const driverData: DriverForm = {
-                id: id,
+                id: formData.id,
                 name: formData.name,
-                email: email,
+                email: formData.email,
                 phone: formData.phone,
                 experience: formData.experience,
                 licenseType: formData.licenseType,
                 specializations: formData.specializations,
                 serviceArea: formData.serviceArea,
-                photo: formData.photo?.name || '', // Use filename or handle the photo upload separately
+                photo: formData.photo!, // Assumes photo is always provided for drivers
             };
             onSubmitDriverForm(driverData);
         } else if (account_type === AccountType.client_new) {
-            // For client, we need to pass client data
-            const clientData: Client = {
-                id: formData.name, // Assuming `name` is treated as ID here
+            const clientData: ClientForm = {
+                id: formData.id,
                 phone: formData.phone,
+                photo: formData.photo!, // Assumes photo is required for clients
             };
             onSubmitClientForm(clientData);
         }
@@ -120,12 +114,10 @@ export default function Form({
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                                 <label className="block text-lg font-medium text-gray-700">Name</label>
-                                {/* Display name as text */}
                                 <span className="mt-2 block px-4 py-2 text-gray-600">{formData.name}</span>
                             </div>
                             <div>
                                 <label className="block text-lg font-medium text-gray-700">Email</label>
-                                {/* Display email as text */}
                                 <span className="mt-2 block px-4 py-2 text-gray-600">{formData.email}</span>
                             </div>
                         </div>
@@ -225,6 +217,7 @@ export default function Form({
                                 name="photo"
                                 accept="image/*"
                                 onChange={handleChange}
+                                required
                                 className="mt-2 w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm"
                             />
                         </div>
