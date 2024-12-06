@@ -100,8 +100,8 @@ export default function DriverDashboard({
               currentUser={user}
               otherUser={selectedUser}
               messages={messages.filter(
-                m => (m.senderId === user.id && m.receiverId === selectedUser.id) ||
-                     (m.senderId === selectedUser.id && m.receiverId === user.id)
+                m => (m.sender_uuid === user.id && m.receiver_uuid === selectedUser.id) ||
+                     (m.sender_uuid === selectedUser.id && m.receiver_uuid === user.id)
               )}
               onSendMessage={handleSendMessage}
               onClose={() => setSelectedUser(null)}

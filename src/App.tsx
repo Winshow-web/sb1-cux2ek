@@ -1,4 +1,4 @@
-import {useState} from 'react';
+import { useState } from 'react';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import ClientDashboard from './components/ClientDashboard';
@@ -7,60 +7,23 @@ import BookingForm from './components/BookingForm';
 import AuthModal from './components/AuthModal';
 import Footer from './components/Footer';
 import AnimatedBackground from './components/AnimatedBackground';
-import {Booking,/* BookingFormData,*/ BookingStatus, Driver, User, UserType} from './types';
-
-const MOCK_DRIVERS: Driver[] = [
-  {
-    id: '1',
-    email: "JohnSmith@gmail.com",
-    name: 'John Smith',
-    experience: 12,
-    rating: 4.8,
-    licenseType: 'Commercial Driver License (CDL) - Class A',
-    availability: true,
-    photo: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80',
-    specializations: ['Long Distance', 'Tourist Groups', 'Mountain Routes'],
-    phone: "",
-    serviceArea: ""
-  },
-  {
-    id: '2',
-    email: "SarahJohnson@gmail.com",
-    name: 'Sarah Johnson',
-    experience: 8,
-    rating: 4.9,
-    licenseType: 'Commercial Driver License (CDL) - Class B',
-    availability: true,
-    photo: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&q=80',
-    specializations: ['City Tours', 'School Transport', 'Event Transportation'],
-    phone: "",
-    serviceArea: ""
-  },
-  {
-    id: '3',
-    email: "MichaelChen@gmail.com",
-    name: 'Michael Chen',
-    experience: 15,
-    rating: 4.7,
-    licenseType: 'Commercial Driver License (CDL) - Class A',
-    availability: false,
-    photo: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80',
-    specializations: ['Interstate Travel', 'Luxury Tours', 'Night Routes'],
-    phone: "",
-    serviceArea: ""
-  },
-];
+import { AccountType, Booking, BookingStatus, Driver, BasicUser, Message } from './types';
+//import {transferableAbortController} from "node:util";
 
 function App() {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<BasicUser | null>(null);
   const [selectedDriver, setSelectedDriver] = useState<string | null>(null);
   const [bookings, setBookings] = useState<Booking[]>([]);
+  const [setMessages] = useState<Message[]>([]);
   const [showBookingForm, setShowBookingForm] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
-  const [drivers, setDrivers] = useState<Driver[]>(MOCK_DRIVERS);
-  const [allUsers, setAllUsers] = useState<User[]>([]);
+  const [drivers, setDrivers] = useState<Driver[]>([]);
+  const [allUsers/*, setAllUsers*/] = useState<BasicUser[]>([]);
 
-  const handleBook = (driverId: string) => {
+  const baseUrl = 'http://localhost:5000';
+
+  // Handle booking initiation
+  const handleBook = async (driverId: string) => {
     if (!user) {
       setShowAuthModal(true);
       return;
@@ -69,181 +32,326 @@ function App() {
     setShowBookingForm(true);
   };
 
-  const handleBookingSubmit = (data: {
+  // Handle booking submission
+  const handleBookingSubmit = async (data: {
     startDate: string;
     endDate: string;
     route: string;
     requirements: string;
   }) => {
     if (selectedDriver && user) {
-      const newBooking: Booking = {
-        id: Math.random().toString(36).substr(2, 9),
-        driverId: selectedDriver,
-        clientId: user.id,
-        startDate: new Date(data.startDate), // Convert string to Date
-        endDate: new Date(data.endDate),     // Convert string to Date
-        route: data.route,
-        requirements: data.requirements,
-        status: BookingStatus.Pending,
-      };
-      setBookings([...bookings, newBooking]);
-      setShowBookingForm(false);
-      setSelectedDriver(null);
+      try {
+        const response = await fetch('http://localhost:3000/api/bookings', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            driver_uuid: selectedDriver,
+            client_uuid: user.uuid,
+            startDate: new Date(data.startDate),
+            endDate: new Date(data.endDate),
+            route: data.route,
+            requirements: data.requirements,
+            status: BookingStatus.Pending
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to create booking');
+        }
+
+        const newBooking = await response.json();
+        setBookings([...bookings, newBooking]);
+        setShowBookingForm(false);
+        setSelectedDriver(null);
+      } catch (error) {
+        console.error('Error creating booking:', error);
+      }
     }
   };
 
-  const handleLogin = (email: string, _password: string, type: UserType) => {
-    const userId = Math.random().toString(36).substr(2, 9);
-    const newUser = {
-      id: userId,
-      email,
-      name: email.split('@')[0],
-      type,
-    };
-    setUser(newUser);
-    setAllUsers([...allUsers, newUser]);
-    setShowAuthModal(false);
-    
-    // If logging in as a driver, create a driver profile
-    if (type === 'driver') {
-      const newDriver: Driver = {
-        id: userId,
-        email: email,
-        name: email.split('@')[0],
-        experience: 5,
-        rating: 4.5,
-        licenseType: 'Commercial Driver License (CDL) - Class A',
-        availability: true,
-        photo: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80',
-        specializations: ['City Tours', 'Airport Transfers'],
-        phone: "",
-        serviceArea: ""
-      };
-      setDrivers([...drivers, newDriver]);
+  // Handle user login
+  const handleLogin = async (email: string, password: string) => {
+    try {
+      const response = await fetch(`${baseUrl}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (response.ok) {
+
+        const data = await response.json();
+
+        setUser(data.user);
+        setShowAuthModal(false);
+
+        const user_id = data.user.id;
+        const accountType = data.user.account_type;
+
+        if (accountType === AccountType.client_disabled) {
+          // Handle case for disabled client account
+        } else if (accountType === AccountType.client_suspended) {
+          // Handle case for suspended client account
+        } else if (accountType === AccountType.client_new) {
+          // Handle case for new client account
+        } else if (accountType === AccountType.client_pending) {
+          // Handle case for client account awaiting approval
+        } else if (accountType === AccountType.client_rejected) {
+          // Handle case for rejected client account
+        } else if (accountType === AccountType.client) {
+          // Handle case for active client account
+        } else if (accountType === AccountType.driver_disabled) {
+          // Handle case for disabled driver account
+        } else if (accountType === AccountType.driver_suspended) {
+          // Handle case for suspended driver account
+        } else if (accountType === AccountType.driver_new) {
+          // Handle case for new driver account
+        } else if (accountType === AccountType.driver_pending) {
+          // Handle case for driver account awaiting approval
+        } else if (accountType === AccountType.driver_rejected) {
+          // Handle case for rejected driver account
+        } else if (accountType === AccountType.driver) {
+          await fetchDriverData(user_id);
+          await fetchUserBookings(user_id);
+        } else if (accountType === AccountType.administrator_disabled) {
+          // Handle case for disabled administrator account
+        } else if (accountType === AccountType.administrator_suspended) {
+          // Handle case for suspended administrator account
+        } else if (accountType === AccountType.administrator) {
+          // Handle case for active administrator account
+        } else {
+          // Handle case for unknown or unrecognized account type
+        }
+
+
+
+
+      } else {
+        throw new Error('Login failed');
+      }
+
+
+    } catch (error) {
+      console.error('Login error:', error);
     }
   };
 
-  const handleSignup = (name: string, email: string, _password: string, type: UserType) => {
-    const userId = Math.random().toString(36).substr(2, 9);
-    const newUser = {
-      id: userId,
-      email,
-      name,
-      type,
-    };
-    setUser(newUser);
-    setAllUsers([...allUsers, newUser]);
-    setShowAuthModal(false);
-    
-    // If signing up as a driver, create a driver profile
-    if (type === 'driver') {
-      const newDriver: Driver = {
-        id: userId,
-        email: email,
-        name,
-        experience: 0,
-        rating: 5.0,
-        licenseType: 'Commercial Driver License (CDL) - Class A',
-        availability: true,
-        photo: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80',
-        specializations: ['City Tours'],
-        phone: "",
-        serviceArea: ""
-      };
-      setDrivers([...drivers, newDriver]);
+  // Handle user registration
+  const handleSignup = async (name: string, email: string, password: string, account_type: AccountType) => {
+    try {
+
+      if (account_type !== AccountType.client_new && account_type !== AccountType.driver_new) {
+        throw new Error('C: Provide a valid account type for register: ' + account_type );
+      }
+
+      const response = await fetch(`${baseUrl}/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, password, account_type }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setUser(data.user);
+        alert('Registration successful!');
+      } else {
+        throw new Error('Registration failed');
+      }
+
+
+    } catch (error) {
+      console.error('Registration error:', error);
     }
   };
 
-  const handleLogout = () => {
-    setUser(null);
-    setBookings([]);
+  const handleNewDriver = async (driver: Driver  ) => {
+    try {
+      const response = await fetch(`${baseUrl}/new/driver`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ driver }),
+      });
+
+      if (response.ok) {
+        //const data = await response.json();
+      } else {
+        throw new Error('Registration failed');
+      }
+
+    } catch (error) {
+      console.error('New driver error:', error);
+    }
   };
 
-  const handleUpdateAvailability = (driverId: string, available: boolean) => {
-    setDrivers(drivers.map(driver =>
-      driver.id === driverId
-        ? { ...driver, availability: available }
-        : driver
-    ));
+  // Handle user logout
+  const handleLogout = async () => {
+    try {
+      // Clear local state
+      setUser(null);
+      setBookings([]);
+      setMessages([]);
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
   };
 
-  const handleUpdateBookingStatus = (bookingId: string, status: Booking['status']) => {
-    setBookings(bookings.map(booking =>
-      booking.id === bookingId
-        ? { ...booking, status }
-        : booking
-    ));
+  // Fetch driver data
+  const fetchDriverData = async (driverId: string) => {
+    try {
+
+      const response = await fetch(`${baseUrl}/get/driver`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ driverId }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch driver data');
+      }
+
+      const data = await response.json();
+
+      setDrivers(prevDrivers => {
+        const driverExists = prevDrivers.some(d => d.id === driverId);
+        if (!driverExists) {
+          return [...prevDrivers, data];
+        }
+        return prevDrivers.map(d => d.id === driverId ? data : d);
+      });
+    } catch (error) {
+      console.error('Error fetching driver data:', error);
+    }
   };
 
-  const handleUpdateDriver = (updatedDriver: Driver) => {
-    setDrivers(drivers.map(driver =>
-      driver.id === updatedDriver.id ? updatedDriver : driver
-    ));
+  // Fetch user bookings
+  const fetchUserBookings = async (userId: string) => {
+    try {
+      const response = await fetch(`http://localhost:3000/api/bookings/user/${userId}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch bookings');
+      }
+      const data = await response.json();
+      setBookings(data);
+    } catch (error) {
+      console.error('Error fetching bookings:', error);
+    }
   };
 
-  const userDriver = user?.type === 'driver'
-    ? drivers.find(d => d.id === user.id)
-    : null;
+  // Handle driver availability update
+  const handleUpdateAvailability = async (driverId: string, available: boolean) => {
+    try {
+      const response = await fetch(`http://localhost:3000/api/drivers/${driverId}/availability`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ availability: available }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update availability');
+      }
+
+      setDrivers(drivers.map(driver =>
+          driver.id === driverId
+              ? { ...driver, availability: available }
+              : driver
+      ));
+    } catch (error) {
+      console.error('Error updating availability:', error);
+    }
+  };
+
+  // Handle booking status update
+  const handleUpdateBookingStatus = async (bookingId: string, status: BookingStatus) => {
+    try {
+      const response = await fetch(`http://localhost:3000/api/bookings/${bookingId}/status`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update booking status');
+      }
+
+      setBookings(bookings.map(booking =>
+          booking.booing_id === bookingId
+              ? { ...booking, status }
+              : booking
+      ));
+    } catch (error) {
+      console.error('Error updating booking status:', error);
+    }
+  };
+
+  // Filter bookings based on user type
+  const userDriver = user?.accountType.includes('driver')
+      ? drivers.find(d => d.id === user.uuid)
+      : null;
 
   const driverBookings = userDriver
-    ? bookings.filter(b => b.driverId === userDriver.id)
-    : [];
+      ? bookings.filter(b => b.driver_uuid === userDriver.id)
+      : [];
 
-  const clientBookings = user?.type === 'client'
-    ? bookings.filter(b => b.clientId === user.id)
-    : [];
+  const clientBookings = user?.accountType.includes('client')
+      ? bookings.filter(b => b.client_uuid === user.uuid)
+      : [];
 
   return (
-    <div className="min-h-screen bg-transparent flex flex-col relative">
-      <AnimatedBackground />
-      <Navbar
-        user={user}
-        onAuthClick={() => setShowAuthModal(true)}
-        onLogout={handleLogout}
-      />
-      
-      {!user && <Hero />}
-      
-      <main className="flex-grow">
-        {user?.type === 'client' && (
-          <ClientDashboard
+      <div className="min-h-screen bg-transparent flex flex-col relative">
+        <AnimatedBackground />
+        <Navbar
             user={user}
-            drivers={drivers}
-            bookings={clientBookings}
-            onBook={handleBook}
-          />
-        )}
-
-        {user?.type === 'driver' && userDriver && (
-          <DriverDashboard
-            user={user}
-            driver={userDriver}
-            bookings={driverBookings}
-            onUpdateAvailability={(available) => handleUpdateAvailability(userDriver.id, available)}
-            onUpdateBookingStatus={handleUpdateBookingStatus}
-            onUpdateDriver={handleUpdateDriver}
-            allUsers={allUsers}
-          />
-        )}
-
-        {showBookingForm && selectedDriver && (
-          <BookingForm
-            onSubmit={handleBookingSubmit}
-            onClose={() => setShowBookingForm(false)}
-          />
-        )}
-      </main>
-
-      {showAuthModal && (
-        <AuthModal
-          onClose={() => setShowAuthModal(false)}
-          onLogin={handleLogin}
-          onSignup={handleSignup}
+            onAuthClick={() => setShowAuthModal(true)}
+            onLogout={handleLogout}
         />
-      )}
 
-      <Footer />
-    </div>
+        {!user && <Hero />}
+
+        <main className="flex-grow">
+          {user?.accountType === AccountType.client && (
+              <ClientDashboard
+                  user={user}
+                  drivers={drivers}
+                  bookings={clientBookings}
+                  onBook={handleBook}
+              />
+          )}
+
+          {user?.accountType === AccountType.driver && userDriver && (
+              <DriverDashboard
+                  user={user}
+                  driver={userDriver}
+                  bookings={driverBookings}
+                  onUpdateAvailability={(available) => handleUpdateAvailability(userDriver.id, available)}
+                  onUpdateBookingStatus={handleUpdateBookingStatus}
+                  allUsers={allUsers}
+              />
+          )}
+
+          {showBookingForm && selectedDriver && (
+              <BookingForm
+                  onSubmit={handleBookingSubmit}
+                  onClose={() => setShowBookingForm(false)}
+              />
+          )}
+        </main>
+
+        {showAuthModal && (
+            <AuthModal
+                onClose={() => setShowAuthModal(false)}
+                onLogin={handleLogin}
+                onSignup={handleSignup}
+            />
+        )}
+
+        <Footer />
+      </div>
   );
 }
 
