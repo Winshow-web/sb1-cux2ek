@@ -49,10 +49,20 @@ export interface Client {
     phone: string;
 }
 
-export interface ClientForm {
+export interface ClientFormSubmit {
     id: string;
+    name: string;
+    email: string;
     phone: string;
     photo: File;
+}
+
+export interface ClientForm {
+    id: string;
+    name: string;
+    email: string;
+    phone: string;
+    photo: string
 }
 
 export interface Driver {
@@ -67,7 +77,7 @@ export interface Driver {
     photo: string;
 }
 
-export interface DriverForm {
+export interface DriverFormSubmit {
     id: string;
     name: string;
     email: string;
@@ -78,3 +88,22 @@ export interface DriverForm {
     serviceArea: string;
     photo: File;
 }
+
+export interface DriverForm {
+    id: string;
+    name: string;
+    email: string;
+    phone: string;
+    experience: string;
+    licenseType: string;
+    specializations: string[];
+    serviceArea: string;
+    photo: string;
+}
+
+enum AdminTab {
+    driver_form_pending = 'driver_form_pending',
+    client_form_pending = 'client_form_pending'
+}
+
+export { AdminTab };

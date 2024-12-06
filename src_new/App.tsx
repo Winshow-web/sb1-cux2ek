@@ -1,12 +1,14 @@
-import { useState, useEffect } from 'react';
+import {useEffect, useState} from 'react';
 //import { Supabase_User } from '@supabase/supabase-js';
-import {AccountType, User, DriverForm, ClientForm} from "./types.ts";
+import {AccountType, ClientForm, ClientFormSubmit, DriverForm, DriverFormSubmit, User} from "./types.ts";
 import AnimatedBackground from "./Components/Home/AnimatedBackground.tsx";
 import Navbar from "./Components/Home/Navbar.tsx";
 import Hero from "./Components/Home/Hero.tsx";
 import Form from "./Components/Form/Form.tsx";
 import Footer from "./Components/Home/Footer.tsx";
 import AuthModal from "./Components/AuthSidePanel/AuthSidePanel";
+import FormPending from "./Components/Form/FormPending";
+import AdminDashboard from "./Components/Dashboard/Admin/AdminDashboard";
 
 function App() {
     const [user, setUser] = useState<User | null>(null);
@@ -22,7 +24,7 @@ function App() {
 
     const getTokenFromCookies = (): string | null => {
         const match = document.cookie.match(/(^| )authToken=([^;]+)/);
-        console.log("match", match);
+        //console.log("match", match);
         return match ? match[2] : null;  // Return the token or null if not found
     };
 
@@ -108,7 +110,7 @@ function App() {
     };
 
     // Function to handle driver registration form submission
-    const handleDriverSubmit = async (driverData: DriverForm): Promise<void> => {
+    const handleDriverSubmit = async (driverData: DriverFormSubmit): Promise<void> => {
         try {
             const token = getTokenFromCookies();
             if (!token) {
@@ -146,8 +148,8 @@ function App() {
             if (response.ok) {
                 const data = await response.json();
                 console.log('Request submitted successfully:', data);
-                alert('Driver registration successful!');
-                // TODO: 5 After success, load the form and then redirect to a form pending page
+                //alert('Driver registration successful!');
+                setUser(data.user);
             } else {
                 const errorData = await response.json();
                 console.error('Driver registration failed:', errorData);
@@ -159,7 +161,7 @@ function App() {
         }
     };
 
-    const handleClientSubmit = async (clientData: ClientForm): Promise<void> => {
+    const handleClientSubmit = async (clientData: ClientFormSubmit): Promise<void> => {
         try {
             const token = getTokenFromCookies();
             if (!token) {
@@ -170,6 +172,8 @@ function App() {
 
             const formData = new FormData();
             formData.append('id', clientData.id);
+            formData.append('name', clientData.name); // Add name
+            formData.append('email', clientData.email); // Add email
             formData.append('phone', clientData.phone);
 
             if (clientData.photo instanceof File) {
@@ -191,7 +195,8 @@ function App() {
             if (response.ok) {
                 const data = await response.json();
                 console.log('Client request submitted successfully:', data);
-                alert('Client registration successful!');
+                //alert('Client registration successful!');
+                setUser(data.user);
             } else {
                 const errorData = await response.json();
                 console.error('Client registration failed:', errorData);
@@ -203,6 +208,37 @@ function App() {
         }
     };
 
+    // Fetch driver data for pending form
+    const fetchDriverData = async (): Promise<DriverForm> => {
+        const response = await fetch(`${baseUrl}/form/load`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${getTokenFromCookies()}`,
+            },
+        });
+        const data = await response.json();
+        if (data.registrationData?.type === 'driver') {
+            return data.registrationData.data;
+        } else {
+            throw new Error('Driver data not found');
+        }
+    };
+
+    // Fetch client data for pending form
+    const fetchClientData = async (): Promise<ClientForm> => {
+        const response = await fetch(`${baseUrl}/form/load`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${getTokenFromCookies()}`,
+            },
+        });
+        const data = await response.json();
+        if (data.registrationData?.type === 'client') {
+            return data.registrationData.data;
+        } else {
+            throw new Error('Client data not found');
+        }
+    };
 
     const handleLogout = async () => {
         try {
@@ -227,7 +263,7 @@ function App() {
 
             <main className="flex-grow">
                 {user ? (
-                    user.account_type === AccountType.client_new || user.account_type === 'driver_new' ? (
+                    user.account_type === AccountType.client_new || user.account_type === AccountType.driver_new ? (
                         <Form
                             id={user.uuid}
                             name={user.name}
@@ -235,6 +271,17 @@ function App() {
                             account_type={user.account_type}
                             onSubmitDriverForm={handleDriverSubmit}
                             onSubmitClientForm={handleClientSubmit}
+                        />
+                    ) : user.account_type === AccountType.driver_pending || user.account_type === AccountType.client_pending ? (
+                        <FormPending
+                            account_type={user.account_type}
+                            onFetchDriverForm={fetchDriverData}
+                            onFetchClientForm={fetchClientData}
+                        />
+                    ) : user.account_type === AccountType.administrator? (
+                        <AdminDashboard
+                            baseUrl={baseUrl}
+                            getTokenFromCookies={getTokenFromCookies}
                         />
                     ) : (
                         <p>Unsupported account type: {user.account_type}</p>

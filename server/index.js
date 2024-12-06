@@ -12,6 +12,7 @@ import {header} from "express-validator";
 
 import authRouter from './routes/auth.js';
 import formRouter from './routes/form.js';
+import adminRouter from './routes/admin.js';
 import verifyToken from "./middleware/auth.js";
 
 // Load environment variables from .env file
@@ -51,6 +52,7 @@ app.use(express.json());
 app.get('/auth/me', verifyToken, (req, res) => {return res.json({ user: req.user });});
 app.use('/auth', authRouter);
 app.use('/form', formRouter);
+app.use('/admin', adminRouter);
 
 
 const authenticate = async (req, res, next) => {

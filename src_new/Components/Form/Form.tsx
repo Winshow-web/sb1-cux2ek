@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
-import { AccountType, ClientForm, DriverForm } from '../../types.ts';
+import { AccountType, ClientFormSubmit, DriverFormSubmit } from '../../types.ts';
 
 interface FormProps {
     id: string;
     name: string;
     email: string;
     account_type: AccountType;
-    onSubmitDriverForm: (driverData: DriverForm) => void;
-    onSubmitClientForm: (clientData: ClientForm) => void;
+    onSubmitDriverForm: (driverData: DriverFormSubmit) => void;
+    onSubmitClientForm: (clientData: ClientFormSubmit) => void;
 }
 
 export default function Form({
@@ -69,7 +69,7 @@ export default function Form({
         e.preventDefault();
 
         if (account_type === AccountType.driver_new) {
-            const driverData: DriverForm = {
+            const driverData: DriverFormSubmit = {
                 id: formData.id,
                 name: formData.name,
                 email: formData.email,
@@ -82,8 +82,10 @@ export default function Form({
             };
             onSubmitDriverForm(driverData);
         } else if (account_type === AccountType.client_new) {
-            const clientData: ClientForm = {
+            const clientData: ClientFormSubmit = {
                 id: formData.id,
+                name: formData.name,
+                email: formData.email,
                 phone: formData.phone,
                 photo: formData.photo!, // Assumes photo is required for clients
             };
