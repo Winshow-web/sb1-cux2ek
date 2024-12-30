@@ -1,0 +1,22 @@
+Fix booking partition creation when driver form approved
+
+Implement driver form rejection
+
+Implement proper display (in client dashboard) for booking requests with selected driver (before driver approved)
+
+
+
+RN:
+Make rpc booking_request.finalize_booking_request
+Implement proper tab for finalizing booking requests
+Implement proper filtering when fetching booking requests
+
+
+
+
+npm run build
+npx serve -s build
+tsc
+npm install --production
+pnpm install --prod
+node dist/index.js
