@@ -23,5 +23,5 @@
     "noUncheckedSideEffectImports": true
   },
   "include": [
-    "src_new"]
+    "src"]
 }
